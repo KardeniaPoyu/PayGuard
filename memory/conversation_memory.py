@@ -73,6 +73,37 @@ class MemoryContext:
         return "\n\n".join(parts)
 
 
+class _InMemoryRedis:
+    """Redis 独立运行内存降级备用类。"""
+    def __init__(self):
+        self._store: Dict[str, Any] = {}
+
+    async def lpush(self, key: str, value: str):
+        self._store.setdefault(key, []).insert(0, value)
+
+    async def lrange(self, key: str, start: int, end: int):
+        lst = self._store.get(key, [])
+        return lst[start:end + 1] if end >= 0 else lst[start:]
+
+    async def llen(self, key: str) -> int:
+        return len(self._store.get(key, []))
+
+    async def get(self, key: str) -> Optional[str]:
+        return self._store.get(key)
+
+    async def setex(self, key: str, ttl: int, value: str):
+        self._store[key] = value
+
+    async def delete(self, key: str):
+        self._store.pop(key, None)
+
+    async def expire(self, key: str, ttl: int):
+        pass
+
+    async def aclose(self):
+        pass
+
+
 class MemoryManager:
     """
     三级记忆管理器。
@@ -100,17 +131,22 @@ class MemoryManager:
         self._client = AsyncAnthropic(**kwargs)
         self._model  = model
 
-        self._redis = redis.from_url(redis_url, decode_responses=True)
+        try:
+            self._redis = redis.from_url(redis_url, decode_responses=True)
+        except Exception:
+            logger.info("Redis 连不上，开启内存降级存储")
+            self._redis = _InMemoryRedis()
 
         # ChromaDB：优先连接独立服务（docker compose 模式），连不上则降级为本地嵌入式
+        use_server = False
         try:
-            # HttpClient 默认也会初始化 ChromaDB telemetry；显式关闭避免 posthog 兼容性错误日志。
             chroma = chromadb.HttpClient(
                 host=chroma_host,
                 port=chroma_port,
                 settings=chromadb.Settings(anonymized_telemetry=False),
             )
             chroma.heartbeat()  # 测试连接
+            use_server = True
             logger.info(f"ChromaDB 已连接: {chroma_host}:{chroma_port}")
         except Exception:
             logger.info(f"ChromaDB 服务不可用，使用本地嵌入式模式: {chroma_path}")
@@ -119,10 +155,13 @@ class MemoryManager:
                 settings=chromadb.Settings(anonymized_telemetry=False),
             )
 
+        from mcp.knowledge_base import LocalHashEmbeddingFunction
+        ef = None if use_server else LocalHashEmbeddingFunction()
+
         # 情景记忆：存储历史对话片段
-        self._episodic = chroma.get_or_create_collection("episodic")
+        self._episodic = chroma.get_or_create_collection("episodic", embedding_function=ef)
         # 用户画像：存储提炼出的偏好和实体
-        self._profile  = chroma.get_or_create_collection("user_profile")
+        self._profile  = chroma.get_or_create_collection("user_profile", embedding_function=ef)
 
     # ── 写入 ──────────────────────────────────────────────────────────────────
 

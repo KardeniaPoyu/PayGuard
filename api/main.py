@@ -68,7 +68,10 @@ def _anthropic_cfg() -> Dict[str, Any]:
 async def lifespan(app: FastAPI):
     global _orchestrator, _memory, _tool_manager, _monitor, _evaluator, _skill_manager
 
-    print(BANNER, flush=True)
+    try:
+        print(BANNER, flush=True)
+    except Exception:
+        print("=== EchoMind v2.0 ===", flush=True)
 
     from agents.agent_orchestrator import AgentOrchestrator, Request
     from core.intent_recognizer import IntentRecognizer
@@ -308,15 +311,18 @@ async def chat(req: ChatRequest):
     # 5. 异步更新用户画像（不阻塞响应）
     asyncio.create_task(_memory.update_profile(req.user_id, conv_id))
 
+    def _val(x):
+        return x.value if hasattr(x, "value") else str(x or "")
+
     return ChatResponse(
         conv_id=conv_id,
         response=result.response,
-        intent=result.intent.value if result.intent else "other",
+        intent=_val(result.intent) if result.intent else "other",
         intent_group=intent_result.intent_group,
-        agent_type=result.agent_type.value,
-        agent_types=[agent_type.value for agent_type in result.agent_types],
-        primary_agent=result.primary_agent.value if result.primary_agent else result.agent_type.value,
-        supporting_agents=[agent_type.value for agent_type in result.supporting_agents],
+        agent_type=_val(result.agent_type),
+        agent_types=[_val(at) for at in result.agent_types],
+        primary_agent=_val(result.primary_agent) if result.primary_agent else _val(result.agent_type),
+        supporting_agents=[_val(at) for at in result.supporting_agents],
         routing_reason=result.routing_reason,
         routing_confidence=result.routing_confidence,
         escalated=result.escalated,

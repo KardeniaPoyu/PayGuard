@@ -21,13 +21,37 @@ import chromadb
 logger = logging.getLogger(__name__)
 
 
+class LocalHashEmbeddingFunction:
+    """轻量本地向量哈希函数，避免 C 盘空间不足下载 ONNX 模型失败。"""
+    def __init__(self, dims: int = 256):
+        self.dims = dims
+
+    def name(self) -> str:
+        return "local_hash"
+
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        results = []
+        for text in input:
+            normalized = text.lower().strip()
+            vec = [0.0] * self.dims
+            tokens = set()
+            for n in (1, 2, 3):
+                if len(normalized) >= n:
+                    tokens.update(normalized[i:i + n] for i in range(len(normalized) - n + 1))
+            if not tokens:
+                tokens.add(normalized)
+            for token in tokens:
+                digest = hashlib.md5(token.encode("utf-8")).digest()
+                idx = int.from_bytes(digest[:4], "big") % self.dims
+                sign = 1.0 if digest[4] % 2 == 0 else -1.0
+                vec[idx] += sign
+            results.append(vec)
+        return results
+
+
 class KnowledgeBase:
     """
     基于 ChromaDB 的 RAG 知识库。
-
-    ChromaDB 内置了 Embedding 模型（all-MiniLM-L6-v2），
-    调用 add() 时自动生成向量，query() 时自动做语义匹配。
-    不需要额外调用 Anthropic Embeddings API。
     """
 
     COLLECTION_NAME = "knowledge_base"
@@ -41,7 +65,6 @@ class KnowledgeBase:
         # 优先连接独立 ChromaDB 服务（服务端内置 embedding 模型，客户端无需下载）
         self._use_server = False
         try:
-            # HttpClient 默认也会初始化 ChromaDB telemetry；显式关闭避免 posthog 兼容性错误日志。
             self._client = chromadb.HttpClient(
                 host=chroma_host,
                 port=chroma_port,
@@ -57,11 +80,11 @@ class KnowledgeBase:
                 settings=chromadb.Settings(anonymized_telemetry=False),
             )
 
-        # 使用服务端时不传 embedding_function，让服务端处理
-        # 本地模式时也不传，使用 ChromaDB 默认的（会触发模型下载）
+        ef = None if self._use_server else LocalHashEmbeddingFunction()
         self._collection = self._client.get_or_create_collection(
             name=self.COLLECTION_NAME,
             metadata={"description": "EchoMind RAG 知识库"},
+            embedding_function=ef,
         )
 
         # 如果知识库为空，导入默认文档

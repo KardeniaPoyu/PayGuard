@@ -1,0 +1,32 @@
+[
+  {
+    "case_id": "legal_001",
+    "category": "labor_dispute",
+    "question": "公司无故把我辞退了，我在公司工作了 2 年零 8 个月，月薪 15000 元。法律规定公司应该赔我多少钱？算 N 还是 2N？"
+  },
+  {
+    "case_id": "legal_002",
+    "category": "contract_dispute",
+    "question": "对方供应商违约迟延交货，合同里写了按合同金额 50% 扣除违约金。如果上法院打官司，法院会支持这 50% 的违约金吗？"
+  },
+  {
+    "case_id": "legal_003",
+    "category": "data_compliance",
+    "question": "我们准备把国内电商用户的个人信息传输到位于新加坡的 AWS 服务器，在法律合规上需要做哪些审批和评估？"
+  },
+  {
+    "case_id": "legal_004",
+    "category": "labor_probation",
+    "question": "我签了一份 3 年期的劳动合同，公司在合同里约定了 8 个月试用期，试用期工资发转正工资的 60%。这符合劳动合同法吗？"
+  },
+  {
+    "case_id": "legal_005",
+    "category": "procurement_review",
+    "question": "法务审查采购合同的时候，关于知识产权归属和付款顺序有哪些不能踩的红线规章？"
+  },
+  {
+    "case_id": "legal_006",
+    "category": "non_compete",
+    "question": "离职后公司要求我履行 1 年竞业限制，但没有给我发放竞业限制补偿金。我还需要遵守竞业协议吗？"
+  }
+]

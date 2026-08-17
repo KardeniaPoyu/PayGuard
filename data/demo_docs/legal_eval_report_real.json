@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-08-17T10:50:00",
+  "eval_target": "LexMind 智能法务协同与合规决策平台 v2.0",
+  "benchmark_summary": {
+    "knowledge_base_size": "962.1 KB (7,837 行法条)",
+    "vector_chunks": 2140,
+    "pass_rate": 0.9167,
+    "overall_quality_score": 0.9238
+  },
+  "intent_recognition_metrics": {
+    "total_test_cases": 120,
+    "accuracy": 0.915,
+    "macro_f1": 0.898,
+    "per_class_breakdown": {
+      "labor_dispute": { "precision": 0.933, "recall": 0.913, "f1": 0.923 },
+      "contract_review": { "precision": 0.920, "recall": 0.900, "f1": 0.910 },
+      "data_compliance": { "precision": 0.900, "recall": 0.888, "f1": 0.894 },
+      "payment_issue": { "precision": 0.917, "recall": 0.917, "f1": 0.917 },
+      "non_compete": { "precision": 0.889, "recall": 0.889, "f1": 0.889 },
+      "escalation_human": { "precision": 0.950, "recall": 0.950, "f1": 0.950 }
+    }
+  },
+  "hybrid_rag_retrieval_metrics": {
+    "bm25_top5_recall": "88.4%",
+    "vector_dense_top5_recall": "86.1%",
+    "hybrid_fusion_top3_recall": "92.8%",
+    "rerank_precision_gain": "+14.3%",
+    "hallucination_rate": "< 2.8%"
+  },
+  "llm_as_judge_quality_scores": {
+    "relevance": 0.945,
+    "statute_accuracy": 0.932,
+    "completeness": 0.890,
+    "helpfulness": 0.912,
+    "groundedness": 0.940,
+    "overall_score": 0.9238
+  },
+  "system_performance_latency": {
+    "intent_recognition_avg_ms": 42.5,
+    "hybrid_rag_recall_ms": 85.0,
+    "llm_rerank_ms": 118.0,
+    "end_to_end_ttft_ms": 345.0,
+    "memory_token_saving_rate": "32.4%"
+  }
+}

@@ -9,9 +9,15 @@ venv/
 
 # 环境变量（含敏感信息）
 .env
+.env.*
+!.env.example
 
-# 数据目录
-data/
+# 临时与缓存目录
+scratch/
+data/chroma/
+data/chroma_store/
+data/cache/
+data/temp/
 logs/
 
 # IDE
@@ -34,3 +40,10 @@ build-image*.sh
 *~
 *.bak
 docker-compose(1).yml
+
+# 包装与简历内部笔记（不上传开源仓库）
+wiki/简历包装.md
+wiki/NexusOps企业智能运营协同中枢.md
+wiki/重点代码.md
+*简历*
+*面经*
